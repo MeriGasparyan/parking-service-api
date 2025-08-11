@@ -16,8 +16,7 @@ public class RolePermission {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "role_permission_id_seq")
     @SequenceGenerator(
             name = "role_permission_id_seq",
-            sequenceName = "role_permission_id_seq",
-            allocationSize = 50)
+            sequenceName = "role_permission_id_seq")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -17,8 +17,7 @@ public class Spot {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "spots_id_seq")
     @SequenceGenerator(
             name = "spots_id_seq",
-            sequenceName = "spots_id_seq",
-            allocationSize = 50)
+            sequenceName = "spots_id_seq")
     private Long id;
 
     @Column(nullable = false)

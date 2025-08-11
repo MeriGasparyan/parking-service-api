@@ -20,4 +20,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
     WHERE u.email = :email
 """)
     Optional<User> findUserWithRoleAndPermissionsByEmail(@Param("email") String email);
+
+
+    @Query("SELECT u FROM User u JOIN FETCH u.role WHERE u.email = :email")
+    Optional<User> findByEmailWithRole(@Param("email") String email);
+
+    @Query("SELECT u FROM User u JOIN FETCH u.role r JOIN FETCH r.rolePermissions rp JOIN FETCH rp.permission WHERE u.email = :email")
+    Optional<User> findByEmailWithRoleAndPermissions(@Param("email") String email);
+
+    boolean existsByEmail(String email);
+
+    @Query("SELECT u FROM User u " +
+            "LEFT JOIN Community c" +
+            " WHERE u.role.role = 'ROLE_COMMUNITY_MANAGER' " +
+            "AND c.communityManager.id = :communityId")
+    Optional<User> findCommunityManagerByCommunityId(@Param("communityId") Long communityId);
 }

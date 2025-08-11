@@ -3,13 +3,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
 
 @Getter
 @Setter
@@ -20,8 +17,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_id_seq")
     @SequenceGenerator(
             name = "users_id_seq",
-            sequenceName = "users_id_seq",
-            allocationSize = 50)
+            sequenceName = "users_id_seq")
     private Long id;
 
     @Column(name = "first_name", nullable = false)

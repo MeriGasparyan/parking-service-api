@@ -17,8 +17,7 @@ public class Community {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "communities_id_seq")
     @SequenceGenerator(
             name = "communities_id_seq",
-            sequenceName = "communities_id_seq",
-            allocationSize = 50)
+            sequenceName = "communities_id_seq")
     private Long id;
 
     @Column(nullable = false)
@@ -28,6 +27,6 @@ public class Community {
     private String address;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User communityManager;
 }

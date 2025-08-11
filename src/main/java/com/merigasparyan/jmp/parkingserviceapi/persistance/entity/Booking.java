@@ -22,14 +22,17 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bookings_id_seq")
     @SequenceGenerator(
             name = "bookings_id_seq",
-            sequenceName = "bookings_id_seq",
-            allocationSize = 50
+            sequenceName = "bookings_id_seq"
     )
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private Spot spot;
 
     @Column(name = "start_time", nullable = false)
     private Instant startTime;
