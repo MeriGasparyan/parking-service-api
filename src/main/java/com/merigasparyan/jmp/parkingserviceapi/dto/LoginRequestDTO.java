@@ -13,6 +13,6 @@ public class LoginRequestDTO {
     private String email;
 
     @NotBlank
-    @Size(min = 6)
+    @Size(min = 4)
     private String password;
 }

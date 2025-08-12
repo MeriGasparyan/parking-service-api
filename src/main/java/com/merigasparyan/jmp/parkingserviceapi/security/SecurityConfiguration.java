@@ -61,7 +61,8 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
                 .authorizeHttpRequests(a -> a
-                        .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/api/users/create-admin").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(e ->
@@ -71,6 +72,6 @@ public class SecurityConfiguration {
                 .addFilterBefore(this.authorizationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
-
+//
 
 }

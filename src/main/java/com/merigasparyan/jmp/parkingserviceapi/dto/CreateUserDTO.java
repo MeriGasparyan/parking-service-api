@@ -21,6 +21,6 @@ public class CreateUserDTO {
     @Email
     private String email;
     @NotBlank
-    @Size(min = 6, message = "Password must be at least 6 characters long")
+    @Size(min = 4, message = "Password must be at least 4 characters long")
     private String password;
 }

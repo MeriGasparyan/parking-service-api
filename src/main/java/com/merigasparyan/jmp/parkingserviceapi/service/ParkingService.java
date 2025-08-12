@@ -176,6 +176,12 @@ public class ParkingService {
                 .toList();
     }
 
+    public List<BookingDTO> getCurrentBookings() {
+        return bookingRepository.findByStatusIn(List.of(BookingStatus.IN_PROGRESS, BookingStatus.PARKED)).stream()
+                .map(BookingDTO::mapToBookingDto)
+                .toList();
+    }
+
     @Transactional
     public BookingDTO changeBookingStatus(Long bookingId, String status) {
         Booking booking = bookingRepository.findById(bookingId)

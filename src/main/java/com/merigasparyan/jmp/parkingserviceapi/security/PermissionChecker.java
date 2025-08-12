@@ -6,8 +6,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -15,30 +16,29 @@ public class PermissionChecker{
 
     private final UserRepository userRepository;
 
-    public void checkPermission(CustomUserDetails user, String... permissions) {
-        if (!hasPermission(user.getId(), permissions)) {
-            throw new AccessDeniedException("Permission denied. Required any of: " + String.join(", ", permissions));
-        }
+    public void checkPermission(CustomUserDetails user, List<String> permissions) {
+       for (String permission : permissions) {
+           if(hasPermission(user.getId(), permission))
+               return;
+       }
+       throw new AccessDeniedException("You do not have permission to access this resource.");
+    }
+
+    public boolean hasPermission(Long userId, String permission) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return getPermissionsForUser(user.getId()).stream()
+                .anyMatch(rp -> rp.equals(permission));
     }
 
     public Set<String> getPermissionsForUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        Set<String> permissions = new HashSet<>();
-        user.getRole().getRolePermissions().forEach(rp ->
-                permissions.add(rp.getPermission().getName().name()));
-        return permissions;
-    }
-
-    public boolean hasPermission(Long userId, String... permissions) {
-        Set<String> userPermissions = getPermissionsForUser(userId);
-        for (String permission : permissions) {
-            if (userPermissions.contains(permission)) {
-                return true;
-            }
-        }
-        return false;
+        return user.getRole().getRolePermissions().stream()
+                .map(rp -> rp.getPermission().getName().name())
+                .collect(Collectors.toSet());
     }
 
 }

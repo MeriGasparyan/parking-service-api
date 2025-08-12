@@ -36,16 +36,16 @@ public class CommunityService {
     public CommunityDTO createCommunity(CreateCommunityDTO dto, CustomUserDetails currentUser) {
         if (!currentUser.getUser().getRole().getRole().equals(Role.ROLE_ADMIN))
             throw new IllegalCallerException("User is not admin");
-
-        User manager = userRepository.findById(dto.getManagerId()).orElse(null);
-
         Community community = new Community();
         community.setName(dto.getName());
         community.setAddress(dto.getAddress());
-        community.setCommunityManager(manager);
-        if (manager != null) {
-            community.setCommunityManager(manager);
+        if(dto.getManagerId() != null){
+            User manager = userRepository.findById(dto.getManagerId()).orElse(null);
+            if (manager != null) {
+                community.setCommunityManager(manager);
+            }
         }
+
         Community saved = communityRepository.save(community);
         return CommunityDTO.mapToDTO(community);
     }
@@ -55,7 +55,9 @@ public class CommunityService {
         Community community = communityRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Community not found with id " + id));
 
-        if (!community.getCommunityManager().getId().equals(currentUser.getId()) || !currentUser.getUser().getRole().getRole().equals(Role.ROLE_ADMIN)) {
+        if ((community.getCommunityManager() != null &&
+                !community.getCommunityManager().getId().equals(currentUser.getId()) )
+                || !currentUser.getUser().getRole().getRole().equals(Role.ROLE_ADMIN)) {
             throw new IllegalCallerException("Community update is not allowed");
         }
         if (dto.getName() != null) {
@@ -93,7 +95,8 @@ public class CommunityService {
         Community community = communityRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Community not found with id " + id));
 
-        if (!community.getCommunityManager().getId().equals(currentUser.getId()) || !currentUser.getUser().getRole().getRole().equals(Role.ROLE_ADMIN)) {
+        if ((community.getCommunityManager() != null &&
+                !community.getCommunityManager().getId().equals(currentUser.getId()) )|| !currentUser.getUser().getRole().getRole().equals(Role.ROLE_ADMIN)) {
             throw new IllegalCallerException("Community deletion is not allowed");
         }
         communityRepository.deleteById(id);

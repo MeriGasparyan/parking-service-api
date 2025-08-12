@@ -29,7 +29,10 @@ public class UserDTO {
         dto.setLastname(user.getLastname());
         dto.setEmail(user.getEmail());
         dto.setCreatedAt(user.getCreatedAt());
-        dto.setCommunity(CommunityDTO.mapToDTO(user.getCommunity()));
+        if (user.getCommunity() != null) {
+            dto.setCommunity(CommunityDTO.mapToDTO(user.getCommunity()));
+        }
+
         return dto;
     }
 }

@@ -2,6 +2,7 @@ package com.merigasparyan.jmp.parkingserviceapi.service;
 import com.merigasparyan.jmp.parkingserviceapi.dto.CreateUserDTO;
 import com.merigasparyan.jmp.parkingserviceapi.dto.UpdateUserDTO;
 import com.merigasparyan.jmp.parkingserviceapi.dto.UserDTO;
+import com.merigasparyan.jmp.parkingserviceapi.enums.Permission;
 import com.merigasparyan.jmp.parkingserviceapi.enums.Role;
 import com.merigasparyan.jmp.parkingserviceapi.persistance.entity.Community;
 import com.merigasparyan.jmp.parkingserviceapi.persistance.entity.User;
@@ -48,11 +49,25 @@ public class UserService {
     }
 
     @Transactional
+    public UserDTO createAdmin(CreateUserDTO dto) {
+        User user = new User();
+        user.setFirstname(dto.getFirstName());
+        user.setLastname(dto.getLastName());
+        user.setEmail(dto.getEmail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        var role = roleRepository.findByRole(Role.ROLE_ADMIN).orElseThrow();
+        user.setRole(role);
+
+        return UserDTO.mapToDTO(userRepository.save(user));
+    }
+
+    @Transactional
     public UserDTO updateUser(Long id, Long currentUserId, UpdateUserDTO dto) {
         boolean isSelf = currentUserId.equals(id);
-        boolean hasPermission = permissionChecker.hasPermission(id, "MANAGE_USERS");
+        boolean hasPermission = permissionChecker.hasPermission(currentUserId, Permission.MANAGE_USERS.name());
 
-        if (!hasPermission && !isSelf) {
+        if (!isSelf && !hasPermission) {
             throw new AccessDeniedException("You can only update your own profile.");
         }
 
@@ -62,14 +77,21 @@ public class UserService {
         if (dto.getFirstname() != null) user.setFirstname(dto.getFirstname());
         if (dto.getLastname() != null) user.setLastname(dto.getLastname());
         if (dto.getEmail() != null) user.setEmail(dto.getEmail());
-        if (dto.getNewPassword() != null) user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        {
-            if(dto.getCurrentPassword() == null)
-                throw new IllegalArgumentException("You must provide the old password for updating the current one");
+
+        if (dto.getNewPassword() != null) {
+            if (dto.getCurrentPassword() == null) {
+                throw new IllegalArgumentException("Current password is required to set a new password");
+            }
+            if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+                throw new IllegalArgumentException("Current password is incorrect");
+            }
+            user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         }
+
         if (dto.getRole() != null) {
-            if (!hasPermission)
+            if (!hasPermission) {
                 throw new AccessDeniedException("You cannot update your role.");
+            }
             var role = roleRepository.findByRole(Role.valueOf(dto.getRole()))
                     .orElseThrow(() -> new EntityNotFoundException("Role not found: " + dto.getRole()));
             user.setRole(role);

@@ -1,9 +1,6 @@
 package com.merigasparyan.jmp.parkingserviceapi.controller;
 
-import com.merigasparyan.jmp.parkingserviceapi.dto.CommunityDTO;
-import com.merigasparyan.jmp.parkingserviceapi.dto.CreateCommunityDTO;
-import com.merigasparyan.jmp.parkingserviceapi.dto.SpotDTO;
-import com.merigasparyan.jmp.parkingserviceapi.dto.UpdateCommunityDTO;
+import com.merigasparyan.jmp.parkingserviceapi.dto.*;
 import com.merigasparyan.jmp.parkingserviceapi.enums.Permission;
 import com.merigasparyan.jmp.parkingserviceapi.security.CustomUserDetails;
 import com.merigasparyan.jmp.parkingserviceapi.security.PermissionChecker;
@@ -24,19 +21,23 @@ public class CommunityController {
     private final PermissionChecker permissionChecker;
     private final CommunityService communityService;
 
-    @GetMapping("/{communityId}")
+    @GetMapping("/{communityId}/spots")
     public ResponseEntity<List<SpotDTO>> getAllSpotsByCommunity(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long communityId
     ) {
-        permissionChecker.checkPermission(user, "SPOT_VIEW", "SPOT_MANAGE");
+        permissionChecker.checkPermission(user, List.of(Permission.VIEW_AVAILABLE_SPOT.name()));
         return ResponseEntity.ok(communityService.getAllSpotsByCommunity(communityId));
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<CommunityDTO> getCommunity(@PathVariable Long id) {
+        return ResponseEntity.ok(communityService.getCommunity(id));
     }
     @PostMapping
     public ResponseEntity<CommunityDTO> createCommunity(
             @RequestBody CreateCommunityDTO dto,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.CREATE_COMMUNITY.name());
+        permissionChecker.checkPermission(currentUser, List.of(Permission.CREATE_COMMUNITY.name()));
         return new ResponseEntity<>(communityService.createCommunity(dto,currentUser), HttpStatus.CREATED);
     }
 
@@ -45,7 +46,7 @@ public class CommunityController {
             @PathVariable Long id,
             @RequestBody UpdateCommunityDTO dto,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.UPDATE_COMMUNITY.name());
+        permissionChecker.checkPermission(currentUser, List.of(Permission.UPDATE_COMMUNITY.name()));
         return ResponseEntity.ok(communityService.updateCommunity(id, currentUser, dto));
     }
 
@@ -53,7 +54,7 @@ public class CommunityController {
     public ResponseEntity<Void> deleteCommunity(
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.DELETE_COMMUNITY.name());
+        permissionChecker.checkPermission(currentUser, List.of(Permission.DELETE_COMMUNITY.name()));
         communityService.deleteCommunity(id, currentUser);
         return ResponseEntity.noContent().build();
     }

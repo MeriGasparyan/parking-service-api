@@ -26,36 +26,40 @@ public class ParkingController {
     @PostMapping("/book")
     public ResponseEntity<BookingDTO> createBooking(
             @RequestBody CreateBookingDTO dto,
-            @RequestParam Long userId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.CREATE_BOOKING.name());
-        return ResponseEntity.ok(parkingService.createBooking(dto, userId));
+        permissionChecker.checkPermission(currentUser, List.of(Permission.CREATE_BOOKING.name()));
+        return ResponseEntity.ok(parkingService.createBooking(dto, currentUser.getId()));
     }
 
     @PostMapping("/guest-book")
     public ResponseEntity<BookingDTO> createGuestBooking(
             @RequestBody CreateBookingDTO dto,
-            @RequestParam Long userId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.CREATE_GUEST_BOOKING.name());
-        return ResponseEntity.ok(parkingService.createGuestBooking(dto, userId));
+        permissionChecker.checkPermission(currentUser, List.of(Permission.CREATE_GUEST_BOOKING.name()));
+        return ResponseEntity.ok(parkingService.createGuestBooking(dto, currentUser.getId()));
     }
 
     @GetMapping("/user-bookings/{userId}")
     public ResponseEntity<List<BookingDTO>> getUserBookings(
             @PathVariable Long userId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.VIEW_ALL_BOOKINGS.name(),
-                Permission.VIEW_OWN_BOOKING.name());
+        permissionChecker.checkPermission(currentUser, List.of(Permission.VIEW_ALL_BOOKINGS.name(),
+                Permission.VIEW_OWN_BOOKING.name()));
         return ResponseEntity.ok(parkingService.getUserBookings(userId, currentUser.getId()));
     }
 
+    @GetMapping("/current-bookings/{userId}")
+    public ResponseEntity<List<BookingDTO>> getCurrentBookings(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        permissionChecker.checkPermission(currentUser, List.of(Permission.VIEW_CURRENT_BOOKINGS.name()));
+        return ResponseEntity.ok(parkingService.getCurrentBookings(userId));
+    }
     @GetMapping("/current-bookings")
     public ResponseEntity<List<BookingDTO>> getCurrentBookings(
-            @RequestParam Long userId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.VIEW_CURRENT_BOOKINGS.name());
-        return ResponseEntity.ok(parkingService.getCurrentBookings(userId));
+        permissionChecker.checkPermission(currentUser, List.of(Permission.VIEW_CURRENT_BOOKINGS.name()));
+        return ResponseEntity.ok(parkingService.getCurrentBookings());
     }
 
     @GetMapping("/{communityId}/available-spots")
@@ -64,7 +68,7 @@ public class ParkingController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
             @PathVariable Long communityId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.VIEW_AVAILABLE_SPOT.name());
+        permissionChecker.checkPermission(currentUser, List.of(Permission.VIEW_AVAILABLE_SPOT.name()));
         return ResponseEntity.ok(parkingService.getAvailableSpots(from, to, communityId));
     }
 
@@ -72,7 +76,7 @@ public class ParkingController {
     public ResponseEntity<BookingDTO> parkInSpot(
             @PathVariable Long bookingId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.PARK_IN_SPOT.name());
+        permissionChecker.checkPermission(currentUser, List.of(Permission.PARK_IN_SPOT.name()));
         return ResponseEntity.ok(parkingService.parkInSpot(bookingId));
     }
 
@@ -80,7 +84,7 @@ public class ParkingController {
     public ResponseEntity<BookingDTO> leaveParking(
             @PathVariable Long bookingId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.PARK_IN_SPOT.name());
+        permissionChecker.checkPermission(currentUser, List.of(Permission.PARK_IN_SPOT.name()));
         return ResponseEntity.ok(parkingService.leaveTheParking(bookingId));
     }
 
@@ -88,7 +92,7 @@ public class ParkingController {
     public ResponseEntity<BookingDTO> releaseSpot(
             @PathVariable Long bookingId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.RELEASE_SPOT.name());
+        permissionChecker.checkPermission(currentUser, List.of(Permission.RELEASE_SPOT.name()));
         return ResponseEntity.ok(parkingService.releaseSpot(bookingId));
     }
 
@@ -97,7 +101,7 @@ public class ParkingController {
             @PathVariable Long bookingId,
             @RequestParam Long userId,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.CANCEL_BOOKING.name());
+        permissionChecker.checkPermission(currentUser, List.of(Permission.CANCEL_BOOKING.name()));
         parkingService.cancelBooking(bookingId, userId);
         return ResponseEntity.noContent().build();
     }
@@ -107,7 +111,7 @@ public class ParkingController {
             @PathVariable Long bookingId,
             @RequestParam String status,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, Permission.CHANGE_BOOKING_STATUS.name());
+        permissionChecker.checkPermission(currentUser, List.of(Permission.CHANGE_BOOKING_STATUS.name()));
         return ResponseEntity.ok(parkingService.changeBookingStatus(bookingId, status));
     }
 }

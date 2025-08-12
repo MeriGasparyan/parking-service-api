@@ -2,6 +2,7 @@ package com.merigasparyan.jmp.parkingserviceapi.controller;
 
 import com.merigasparyan.jmp.parkingserviceapi.dto.CreateSpotDTO;
 import com.merigasparyan.jmp.parkingserviceapi.dto.SpotDTO;
+import com.merigasparyan.jmp.parkingserviceapi.enums.Permission;
 import com.merigasparyan.jmp.parkingserviceapi.security.CustomUserDetails;
 import com.merigasparyan.jmp.parkingserviceapi.security.PermissionChecker;
 import com.merigasparyan.jmp.parkingserviceapi.service.SpotService;
@@ -25,8 +26,9 @@ public class SpotController {
             @AuthenticationPrincipal CustomUserDetails user,
             @RequestBody CreateSpotDTO dto
     ) {
-        permissionChecker.checkPermission(user, "SPOT_CREATE");
-        return new ResponseEntity<>(spotService.createSpot(dto), HttpStatus.CREATED);
+        System.out.println(permissionChecker.getPermissionsForUser(user.getId()));
+       // permissionChecker.checkPermission(user, List.of(Permission.CREATE_SPOT.name()));
+        return new ResponseEntity<>(spotService.createSpot(dto, user), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
@@ -34,7 +36,7 @@ public class SpotController {
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long id
     ) {
-        permissionChecker.checkPermission(user, "SPOT_VIEW");
+        permissionChecker.checkPermission(user, List.of(Permission.VIEW_AVAILABLE_SPOT.name()));
         return ResponseEntity.ok(spotService.getSpotById(id));
     }
 
@@ -44,8 +46,8 @@ public class SpotController {
             @PathVariable Long id,
             @RequestBody CreateSpotDTO dto
     ) {
-        permissionChecker.checkPermission(user, "SPOT_UPDATE");
-        return ResponseEntity.ok(spotService.updateSpot(id, dto));
+        permissionChecker.checkPermission(user, List.of(Permission.UPDATE_SPOT.name()));
+        return ResponseEntity.ok(spotService.updateSpot(id, dto, user));
     }
 
     @DeleteMapping("/{id}")
@@ -53,8 +55,8 @@ public class SpotController {
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long id
     ) {
-        permissionChecker.checkPermission(user, "SPOT_DELETE");
-        spotService.deleteSpot(id);
+        permissionChecker.checkPermission(user, List.of(Permission.DELETE_SPOT.name()));
+        spotService.deleteSpot(id, user);
         return ResponseEntity.noContent().build();
     }
 }
