@@ -40,12 +40,13 @@ public class PermissionConfig {
 
         Map<Role, Set<Permission>> rolePermissionMapping = Map.of(
                 Role.ROLE_RESIDENT, Set.of(
+                        Permission.CREATE_ACCOUNT,
                         Permission.CREATE_BOOKING,
                         Permission.VIEW_OWN_BOOKING,
                         Permission.CANCEL_OWN_BOOKING,
                         Permission.PARK_IN_SPOT,
                         Permission.RELEASE_SPOT,
-                        Permission.LONG_TERM_BOOKING,
+                        Permission.CREATE_GUEST_BOOKING,
 
                         Permission.VIEW_AVAILABLE_SPOT
                 ),
@@ -63,20 +64,13 @@ public class PermissionConfig {
                         Permission.INVITE_RESIDENT,
                         Permission.REMOVE_RESIDENT,
                         Permission.INVITE_GUEST,
-                        Permission.REMOVE_GUEST
+                        Permission.REMOVE_GUEST,
+                        Permission.VIEW_AVAILABLE_SPOT
                 ),
 
                 Role.ROLE_COMMUNITY_GUARDIAN, Set.of(
                         Permission.VIEW_CURRENT_BOOKINGS,
                         Permission.CHANGE_BOOKING_STATUS
-                ),
-
-                Role.ROLE_GUEST, Set.of(
-                        Permission.CREATE_GUEST_BOOKING,
-                        Permission.VIEW_OWN_BOOKING,
-                        Permission.CANCEL_OWN_BOOKING,
-                        Permission.PARK_IN_SPOT,
-                        Permission.RELEASE_SPOT
                 )
         );
 

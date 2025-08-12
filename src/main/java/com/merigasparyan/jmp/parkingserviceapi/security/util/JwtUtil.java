@@ -26,14 +26,10 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long jwtTokenValidity;
 
-    @Value("${refresh.token.expiration}")
-    private long jwtRefreshTokenValidity;
-
     public static final String AUTH_TYPE = "Bearer ";
     private static final String ROLES = "roles";
     private static final String TOKEN_TYPE = "token_type";
     private static final String ACCESS_TOKEN = "access";
-    private static final String REFRESH_TOKEN = "refresh";
 
     private Algorithm getAlgorithm() {
         return Algorithm.HMAC256(secret.getBytes(StandardCharsets.UTF_8));
@@ -52,24 +48,6 @@ public class JwtUtil {
                 .sign(getAlgorithm());
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
-        return JWT.create()
-                .withSubject(userDetails.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis() + jwtRefreshTokenValidity))
-                .withIssuedAt(new Date())
-                .withClaim(TOKEN_TYPE, REFRESH_TOKEN)
-                .sign(getAlgorithm());
-    }
-
-    public boolean isRefreshToken(String token) {
-        try {
-            DecodedJWT jwt = verifyAndDecode(token);
-            Claim typeClaim = jwt.getClaim(TOKEN_TYPE);
-            return typeClaim != null && REFRESH_TOKEN.equals(typeClaim.asString());
-        } catch (JWTVerificationException e) {
-            return false;
-        }
-    }
 
     public String getUsername(String token) {
         return verifyAndDecode(token).getSubject();

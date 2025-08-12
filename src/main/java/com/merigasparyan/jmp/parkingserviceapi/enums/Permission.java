@@ -1,12 +1,12 @@
 package com.merigasparyan.jmp.parkingserviceapi.enums;
 
 public enum Permission {
+    CREATE_ACCOUNT,
     CREATE_BOOKING,
     VIEW_OWN_BOOKING,
     CANCEL_OWN_BOOKING,
     PARK_IN_SPOT,
     RELEASE_SPOT,
-    LONG_TERM_BOOKING,
 
     VIEW_AVAILABLE_SPOT,
 
@@ -30,5 +30,6 @@ public enum Permission {
     CREATE_COMMUNITY,
     UPDATE_COMMUNITY,
     DELETE_COMMUNITY,
-    ASSIGN_COMMUNITY_MANAGER
+    ASSIGN_COMMUNITY_MANAGER,
+    MANAGE_USERS
 }

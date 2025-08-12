@@ -39,12 +39,20 @@ public class ParkingService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if(spot.getSpotType()==SpotType.VISITOR)
+
+        if (spot.getCommunity() != user.getCommunity()) {
+            throw new BookingConflictException("Spot is not in community, please use guest booking service.");
+        }
+        if (spot.getSpotType() == SpotType.VISITOR)
             throw new BookingConflictException("Visitor spot should only be occupied by visitors");
 
+        return getBookingDTO(bookingDto, spot, user);
+    }
+
+    private BookingDTO getBookingDTO(CreateBookingDTO bookingDto, Spot spot, User user) {
         boolean hasOverlap = bookingRepository.existsBySpotIdAndStatusInAndEndTimeAfterAndStartTimeBefore(
                 spot.getId(),
-                List.of(BookingStatus.BOOKED,BookingStatus.IN_PROGRESS, BookingStatus.PARKED),
+                List.of(BookingStatus.BOOKED, BookingStatus.IN_PROGRESS, BookingStatus.PARKED),
                 bookingDto.getStartTime(),
                 bookingDto.getEndTime());
 
@@ -70,33 +78,20 @@ public class ParkingService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if(spot.getSpotType()!= SpotType.VISITOR)
+
+        if (spot.getSpotType() != SpotType.VISITOR)
             throw new BookingConflictException("A visitor should use a guest spot");
 
-        if(Duration.between(bookingDto.getStartTime(),
+        if (Duration.between(bookingDto.getStartTime(),
                 bookingDto.getEndTime()).toMillis() >= maxDuration)
             throw new BookingConflictException("The visitor spot cannot be booked due to a duration limit of " + maxDuration);
-        boolean hasOverlap = bookingRepository.existsBySpotIdAndStatusInAndEndTimeAfterAndStartTimeBefore(
-                spot.getId(),
-                List.of(BookingStatus.BOOKED,BookingStatus.IN_PROGRESS, BookingStatus.PARKED),
-                bookingDto.getStartTime(),
-                bookingDto.getEndTime());
-
-        if (hasOverlap) {
-            throw new BookingConflictException("The spot is already booked for the selected time range");
-        }
-
-        Booking booking = new Booking();
-        booking.setUser(user);
-        booking.setStartTime(bookingDto.getStartTime());
-        booking.setEndTime(bookingDto.getEndTime());
-        booking.setStatus(BookingStatus.BOOKED);
-        booking = bookingRepository.save(booking);
-
-        return BookingDTO.mapToBookingDto(booking);
+        return getBookingDTO(bookingDto, spot, user);
     }
 
-    public List<BookingDTO> getUserBookings(Long userId) {
+    public List<BookingDTO> getUserBookings(Long userId, Long currentUserId) {
+        if(!currentUserId.equals(userId)) {
+            throw new IllegalCallerException("You cannot view other user's bookings");
+        }
         return bookingRepository.findBookingsForUser(userId).stream()
                 .map(BookingDTO::mapToBookingDto)
                 .toList();
@@ -132,6 +127,7 @@ public class ParkingService {
 
         return BookingDTO.mapToBookingDto(booking);
     }
+
     @Transactional
     public BookingDTO leaveTheParking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -167,13 +163,33 @@ public class ParkingService {
         }
 
 
-
         booking.setStatus(BookingStatus.CANCELLED);
         bookingRepository.save(booking);
 
 
     }
 
+    public List<BookingDTO> getCurrentBookings(Long userId) {
+        Instant now = Instant.now();
+        return bookingRepository.findUpcomingBookingsForUser(userId, now).stream()
+                .map(BookingDTO::mapToBookingDto)
+                .toList();
+    }
+
+    @Transactional
+    public BookingDTO changeBookingStatus(Long bookingId, String status) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+        BookingStatus newStatus;
+        try {
+            newStatus = BookingStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Invalid booking status: " + status);
+        }
+        booking.setStatus(newStatus);
+        bookingRepository.save(booking);
+        return BookingDTO.mapToBookingDto(booking);
+    }
     private boolean isSpotAvailable(Spot spot, Instant from, Instant to) {
         return !bookingRepository.existsBySpotIdAndStatusInAndEndTimeAfterAndStartTimeBefore(
                 spot.getId(),

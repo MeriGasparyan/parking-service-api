@@ -32,12 +32,6 @@ public class SpotService {
         return SpotDTO.mapToSpotDto(spot);
     }
 
-    public List<SpotDTO> getAllSpotsByCommunity(Long communityId) {
-        return spotRepository.findByCommunityId(communityId).stream()
-                .map(SpotDTO::mapToSpotDto)
-                .toList();
-    }
-
     public SpotDTO getSpotById(Long id) {
         return spotRepository.findById(id)
                 .map(SpotDTO::mapToSpotDto)

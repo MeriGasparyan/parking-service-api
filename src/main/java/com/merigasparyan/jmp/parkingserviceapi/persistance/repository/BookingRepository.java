@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,4 +52,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     );
 
     Optional<Booking> findByIdAndUserId(Long bookingId, Long userId);
+
+    @Query("SELECT b FROM Booking b WHERE b.status IN :booked")
+    List<Booking> findByStatusIn(List<BookingStatus> booked);
 }
