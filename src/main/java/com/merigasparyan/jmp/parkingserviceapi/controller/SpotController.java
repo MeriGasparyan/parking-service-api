@@ -27,7 +27,7 @@ public class SpotController {
             @RequestBody CreateSpotDTO dto
     ) {
         System.out.println(permissionChecker.getPermissionsForUser(user.getId()));
-       // permissionChecker.checkPermission(user, List.of(Permission.CREATE_SPOT.name()));
+       permissionChecker.checkPermission(user, List.of(Permission.CREATE_SPOT.name()));
         return new ResponseEntity<>(spotService.createSpot(dto, user), HttpStatus.CREATED);
     }
 
