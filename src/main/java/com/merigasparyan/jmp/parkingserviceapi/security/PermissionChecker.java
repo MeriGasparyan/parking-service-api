@@ -1,4 +1,5 @@
 package com.merigasparyan.jmp.parkingserviceapi.security;
+import com.merigasparyan.jmp.parkingserviceapi.exception.PermissionDeniedException;
 import com.merigasparyan.jmp.parkingserviceapi.persistance.entity.User;
 import com.merigasparyan.jmp.parkingserviceapi.persistance.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class PermissionChecker{
            if(hasPermission(user.getId(), permission))
                return;
        }
-       throw new AccessDeniedException("You do not have permission to access this resource.");
+       throw new PermissionDeniedException("You do not have permission to access this resource.");
     }
 
     public boolean hasPermission(Long userId, String permission) {

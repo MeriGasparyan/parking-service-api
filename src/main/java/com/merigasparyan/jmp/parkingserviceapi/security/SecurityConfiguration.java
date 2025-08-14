@@ -77,10 +77,8 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
                 .authorizeHttpRequests(a -> a
-                        .requestMatchers("/api/users/create-admin").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/community-manager/**").hasAnyRole("ADMIN", "COMMUNITY_MANAGER")
+                        .requestMatchers("/api/users/admin").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e

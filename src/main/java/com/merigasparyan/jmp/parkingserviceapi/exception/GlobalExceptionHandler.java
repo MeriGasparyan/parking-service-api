@@ -62,4 +62,13 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(PermissionDeniedException.class)
+    public ResponseEntity<ExceptionResponse> handlePermissionDenied(PermissionDeniedException ex) {
+        ExceptionResponse response = ExceptionResponse.builder()
+                .status(HttpStatus.FORBIDDEN)
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
 }
