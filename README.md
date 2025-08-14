@@ -26,7 +26,7 @@
 
 ## Overview
 
-The Parking Service API is a RESTful service for managing parking spots, bookings, communities, and users. It supports role-based access control with JWT authentication and permissions enforcement. Users, admins, and community managers can perform operations based on their assigned roles.
+This Parking Service API for managing parking spots, bookings, communities, and users. It supports role-based access control with JWT authentication and permissions enforcement. Users, admins, community managers and guardians can perform operations based on their assigned roles.
 
 ---
 
@@ -125,7 +125,7 @@ Retrieve all spots in a community.
 {
   "code": "B-202",
   "address": "Near Elevator",
-  "spotType": "RESIDENT",
+  "spotType": "STANDARD",
   "communityId": 1
 }
 ```
@@ -268,7 +268,7 @@ Requires permission: `VIEW_CURRENT_BOOKINGS`
   "id": 1,
   "code": "B-202",
   "address": "Near Elevator",
-  "spotType": "RESIDENT | VISITOR | HANDICAPPED",
+  "spotType": "STANDARD | COMPACT | LARGE | EV_CHARGING | HANDICAPPED | MOTORCYCLE | VISITOR",
   "communityId": 1
 }
 ```
@@ -355,7 +355,7 @@ Requires permission: `VIEW_CURRENT_BOOKINGS`
 * All `Create` DTOs use `@NotNull`/`@NotBlank` and `@Email` where applicable.
 * `CreateBookingDTO` has cross-field validation: `endTime` must be after `startTime`.
 * Passwords must be at least 4 characters long.
-* Spot types must be valid enums: `RESIDENT | VISITOR | HANDICAPPED`.
+* Spot types must be valid enums: `STANDARD | COMPACT | LARGE | EV_CHARGING | HANDICAPPED | MOTORCYCLE | VISITOR`.
 
 ---
 
