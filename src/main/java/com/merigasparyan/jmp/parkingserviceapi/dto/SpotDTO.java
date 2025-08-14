@@ -12,6 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SpotDTO {
+
     private Long id;
     private String code;
     private String address;
@@ -19,12 +20,12 @@ public class SpotDTO {
     private Long communityId;
 
     public static SpotDTO mapToSpotDto(Spot spot) {
-        SpotDTO dto = new SpotDTO();
-        dto.setId(spot.getId());
-        dto.setCode(spot.getCode());
-        dto.setAddress(spot.getAddress());
-        dto.setSpotType(spot.getSpotType());
-        dto.setCommunityId(spot.getCommunity().getId());
-        return dto;
+        return new SpotDTO(
+                spot.getId(),
+                spot.getCode(),
+                spot.getAddress(),
+                spot.getSpotType(),
+                spot.getCommunity().getId()
+        );
     }
 }

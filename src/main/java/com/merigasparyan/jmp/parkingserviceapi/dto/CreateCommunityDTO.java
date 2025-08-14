@@ -11,9 +11,11 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class CreateCommunityDTO {
-    @NotBlank
+    @NotBlank(message = "Community name is required")
     private String name;
-    @NotBlank
+
+    @NotBlank(message = "Address is required")
     private String address;
+
     private Long managerId;
 }

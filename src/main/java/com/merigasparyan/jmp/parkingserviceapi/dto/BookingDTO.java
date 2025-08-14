@@ -23,16 +23,17 @@ public class BookingDTO {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
     private Instant endTime;
+
     private String status;
 
     public static BookingDTO mapToBookingDto(Booking booking) {
         BookingDTO dto = new BookingDTO();
         dto.setId(booking.getId());
         dto.setUserId(booking.getUser().getId());
+        dto.setSpotId(booking.getSpot().getId());
         dto.setStartTime(booking.getStartTime());
         dto.setEndTime(booking.getEndTime());
         dto.setStatus(booking.getStatus().name());
-
         return dto;
     }
 }

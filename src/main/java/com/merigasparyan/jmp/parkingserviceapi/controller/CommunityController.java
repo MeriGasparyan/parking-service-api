@@ -4,58 +4,97 @@ import com.merigasparyan.jmp.parkingserviceapi.dto.*;
 import com.merigasparyan.jmp.parkingserviceapi.enums.Permission;
 import com.merigasparyan.jmp.parkingserviceapi.security.CustomUserDetails;
 import com.merigasparyan.jmp.parkingserviceapi.security.PermissionChecker;
+import com.merigasparyan.jmp.parkingserviceapi.service.BookingService;
 import com.merigasparyan.jmp.parkingserviceapi.service.CommunityService;
+import com.merigasparyan.jmp.parkingserviceapi.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/communities")
 @RequiredArgsConstructor
 public class CommunityController {
+
     private final PermissionChecker permissionChecker;
     private final CommunityService communityService;
+    private final UserService userService;
+    private final BookingService bookingService;
 
+    /* --------------------------------- SPOTS --------------------------------- */
     @GetMapping("/{communityId}/spots")
     public ResponseEntity<List<SpotDTO>> getAllSpotsByCommunity(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long communityId
     ) {
-        permissionChecker.checkPermission(user, List.of(Permission.VIEW_AVAILABLE_SPOT.name()));
+        checkPermission(user, Permission.VIEW_AVAILABLE_SPOT);
         return ResponseEntity.ok(communityService.getAllSpotsByCommunity(communityId));
     }
-    @GetMapping("/{id}")
-    public ResponseEntity<CommunityDTO> getCommunity(@PathVariable Long id) {
-        return ResponseEntity.ok(communityService.getCommunity(id));
+
+    @GetMapping("/{communityId}/spots/available")
+    public ResponseEntity<List<AvailableSpotDTO>> getAvailableSpots(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @PathVariable Long communityId,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        checkPermission(user, Permission.VIEW_AVAILABLE_SPOT);
+        return ResponseEntity.ok(bookingService.getAvailableSpots(from, to, communityId));
     }
+
+    /* --------------------------------- USERS --------------------------------- */
+    @PostMapping("/{communityId}/users")
+    public ResponseEntity<UserDTO> createUser(
+            @PathVariable Long communityId,
+            @RequestBody @Valid CreateUserDTO dto
+    ) {
+        return new ResponseEntity<>(userService.createUser(dto, communityId), HttpStatus.CREATED);
+    }
+
+    /* --------------------------------- COMMUNITIES --------------------------------- */
+    @GetMapping("/{communityId}")
+    public ResponseEntity<CommunityDTO> getCommunity(@PathVariable Long communityId) {
+        return ResponseEntity.ok(communityService.getCommunity(communityId));
+    }
+
     @PostMapping
     public ResponseEntity<CommunityDTO> createCommunity(
-            @RequestBody CreateCommunityDTO dto,
-            @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, List.of(Permission.CREATE_COMMUNITY.name()));
-        return new ResponseEntity<>(communityService.createCommunity(dto,currentUser), HttpStatus.CREATED);
+            @RequestBody @Valid CreateCommunityDTO dto,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        checkPermission(user, Permission.CREATE_COMMUNITY);
+        return new ResponseEntity<>(communityService.createCommunity(dto, user), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{communityId}")
     public ResponseEntity<CommunityDTO> updateCommunity(
-            @PathVariable Long id,
-            @RequestBody UpdateCommunityDTO dto,
-            @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, List.of(Permission.UPDATE_COMMUNITY.name()));
-        return ResponseEntity.ok(communityService.updateCommunity(id, currentUser, dto));
+            @PathVariable Long communityId,
+            @RequestBody @Valid UpdateCommunityDTO dto,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        checkPermission(user, Permission.UPDATE_COMMUNITY);
+        return ResponseEntity.ok(communityService.updateCommunity(communityId, user, dto));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{communityId}")
     public ResponseEntity<Void> deleteCommunity(
-            @PathVariable Long id,
-            @AuthenticationPrincipal CustomUserDetails currentUser) {
-        permissionChecker.checkPermission(currentUser, List.of(Permission.DELETE_COMMUNITY.name()));
-        communityService.deleteCommunity(id, currentUser);
+            @PathVariable Long communityId,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        checkPermission(user, Permission.DELETE_COMMUNITY);
+        communityService.deleteCommunity(communityId, user);
         return ResponseEntity.noContent().build();
+    }
+
+    /* --------------------------------- HELPER --------------------------------- */
+    private void checkPermission(CustomUserDetails user, Permission permission) {
+        permissionChecker.checkPermission(user, List.of(permission.name()));
     }
 }

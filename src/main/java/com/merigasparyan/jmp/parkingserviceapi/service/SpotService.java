@@ -11,72 +11,61 @@ import com.merigasparyan.jmp.parkingserviceapi.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-
 @Service
 @RequiredArgsConstructor
 public class SpotService {
+
     private final SpotRepository spotRepository;
     private final CommunityRepository communityRepository;
 
-    public SpotDTO createSpot(CreateSpotDTO spotDto, CustomUserDetails user) {
-        Community community = communityRepository.findById(spotDto.getCommunityId())
-                .orElseThrow(() -> new ResourceNotFoundException("Community not found"));
-        if(community.getCommunityManager() == null || !community.getCommunityManager().getId().equals(user.getId())) {
-            throw new IllegalCallerException("You cannot create a spot in this community");
+    /* ---------------------- CREATE / UPDATE HELPER ---------------------- */
+    private void validateCommunityManager(Community community, CustomUserDetails user) {
+        if (community.getCommunityManager() == null || !community.getCommunityManager().getId().equals(user.getId())) {
+            throw new IllegalCallerException("You are not allowed to manage spots in this community");
         }
-        Spot spot = new Spot();
-        spot.setCode(spotDto.getCode());
-        spot.setAddress(spotDto.getAddress());
-        spot.setSpotType(spotDto.getSpotType());
-        spot.setCommunity(community);
-
-        spot = spotRepository.save(spot);
-        return SpotDTO.mapToSpotDto(spot);
     }
 
+    /* ---------------------- CREATE ---------------------- */
+    public SpotDTO createSpot(CreateSpotDTO dto, CustomUserDetails user, Long communityId) {
+        Community community = communityRepository.findById(communityId)
+                .orElseThrow(() -> new ResourceNotFoundException("Community not found"));
+        validateCommunityManager(community, user);
+
+        Spot spot = Spot.builder()
+                .code(dto.getCode())
+                .address(dto.getAddress())
+                .spotType(dto.getSpotType())
+                .community(community)
+                .build();
+
+        return SpotDTO.mapToSpotDto(spotRepository.save(spot));
+    }
+
+    /* ---------------------- READ ---------------------- */
     public SpotDTO getSpotById(Long id) {
         return spotRepository.findById(id)
                 .map(SpotDTO::mapToSpotDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Spot not found"));
     }
 
-    public SpotDTO updateSpot(Long id, CreateSpotDTO spotDto, CustomUserDetails user) {
+    /* ---------------------- UPDATE ---------------------- */
+    public SpotDTO updateSpot(Long id, CreateSpotDTO dto, CustomUserDetails user) {
         Spot spot = spotRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Spot not found"));
+        validateCommunityManager(spot.getCommunity(), user);
 
-        if(spot.getCommunity().getCommunityManager() == null || !spot.getCommunity().getCommunityManager().getId().equals(user.getId())) {
-            throw new IllegalCallerException("You cannot update a spot in this community");
-        }
-
-
-        if (spotDto.getCode() != null) {
-            spot.setCode(spotDto.getCode());
-        }
-
-        if (spotDto.getAddress() != null) {
-            spot.setAddress(spotDto.getAddress());
-        }
-
-        if (spotDto.getSpotType() != null) {
-            spot.setSpotType(spotDto.getSpotType());
-        }
-
-        if (spotDto.getCommunityId() != null &&
-                !spotDto.getCommunityId().equals(spot.getCommunity().getId())) {
-            Community community = communityRepository.findById(spotDto.getCommunityId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Community not found"));
-            spot.setCommunity(community);
-        }
+        if (dto.getCode() != null) spot.setCode(dto.getCode());
+        if (dto.getAddress() != null) spot.setAddress(dto.getAddress());
+        if (dto.getSpotType() != null) spot.setSpotType(dto.getSpotType());
 
         return SpotDTO.mapToSpotDto(spotRepository.save(spot));
     }
 
+    /* ---------------------- DELETE ---------------------- */
     public void deleteSpot(Long id, CustomUserDetails user) {
-        Spot spot = spotRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Spot not found"));
-        if(!spot.getCommunity().getCommunityManager().getId().equals(user.getId())) {
-            throw new IllegalCallerException("You cannot delete a spot in this community");
-        }
+        Spot spot = spotRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Spot not found"));
+        validateCommunityManager(spot.getCommunity(), user);
         spotRepository.deleteById(id);
     }
-
 }

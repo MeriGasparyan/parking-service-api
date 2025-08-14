@@ -1,42 +1,56 @@
 # Parking Service API Documentation
 
 ## Table of Contents
-- [Overview](#overview)
-- [Authentication](#authentication)
-- [API Endpoints](#api-endpoints)
-    - [Authentication Controller](#authentication-controller)
-    - [Community Controller](#community-controller)
-    - [Parking Controller](#parking-controller)
-    - [Spot Controller](#spot-controller)
-    - [User Controller](#user-controller)
-- [Data Models](#data-models)
-    - [Booking](#booking)
-    - [Spot](#spot)
-    - [Community](#community)
-    - [User](#user)
-- [Permissions](#permissions)
-- [Business Rules](#business-rules)
-- [Error Handling](#error-handling)
+
+* [Overview](#overview)
+* [Authentication](#authentication)
+* [API Endpoints](#api-endpoints)
+
+    * [Authentication Controller](#authentication-controller)
+    * [Community Controller](#community-controller)
+    * [Spot Controller](#spot-controller)
+    * [Parking Controller](#parking-controller)
+    * [User Controller](#user-controller)
+* [Data Models](#data-models)
+
+    * [Booking](#booking)
+    * [Spot](#spot)
+    * [Community](#community)
+    * [User](#user)
+* [Permissions](#permissions)
+* [Business Rules](#business-rules)
+* [Validations](#validations)
+* [Error Handling](#error-handling)
+
+---
 
 ## Overview
-A comprehensive RESTful API for managing parking spots, bookings, communities, and user authentication in a parking management system. The API implements role-based access control with various permissions.
+
+The Parking Service API is a RESTful service for managing parking spots, bookings, communities, and users. It supports role-based access control with JWT authentication and permissions enforcement. Users, admins, and community managers can perform operations based on their assigned roles.
+
+---
 
 ## Authentication
-The API uses JWT (JSON Web Tokens) for authentication. Include the token in the Authorization header for all authenticated requests
 
+* **Method:** JWT (JSON Web Token)
+* Include the token in the `Authorization` header for all authenticated requests:
+  `Authorization: Bearer <token>`
+* **Login Endpoint:** `/api/auth/login`
+  Returns a JWT token on successful login. No prior authentication is required.
+
+---
 
 ## API Endpoints
 
 ### Authentication Controller
 
 #### Login
+
 `POST /api/auth/login`
-
-Authenticates a user and returns a JWT token.
-
-Does **not** require any authentication or permissions.
+Authenticate a user and return a JWT token.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -44,99 +58,69 @@ Does **not** require any authentication or permissions.
 }
 ```
 
+**Response:** JWT token
+
+---
+
 ### Community Controller
 
-#### Get Community Spots
-`GET /api/communities/{communityId}/spots`
+#### Get Community
 
-Get all parking spots for a specific community.
+`GET /api/communities/{id}`
+Retrieve community details by ID.
+
+#### Get Community Spots
+
+`GET /api/communities/{id}/spots`
+Retrieve all spots in a community.
 **Required Permission:** `VIEW_AVAILABLE_SPOT`
 
-#### Get Community
-`GET /api/communities/{id}`
-
-Get community details by ID.
-
 #### Create Community
+
 `POST /api/communities`
-Create a new community. May not include Community manager, can be added via separate request.
 **Required Permission:** `CREATE_COMMUNITY`
 
 **Request Body:**
+
 ```json
 {
   "name": "New Community",
-  "address": "456 Oak Ave"
+  "address": "456 Oak Ave",
+  "managerId": 1
 }
 ```
 
 #### Update Community
+
 `PUT /api/communities/{id}`
-
-Update a community.
-
 **Required Permission:** `UPDATE_COMMUNITY`
 
 **Request Body:**
+
 ```json
 {
   "name": "Updated Community Name",
-  "address": "Updated Address"
+  "address": "Updated Address",
+  "managerId": 2
 }
 ```
 
 #### Delete Community
+
 `DELETE /api/communities/{id}`
-
-Delete a community.
-
 **Required Permission:** `DELETE_COMMUNITY`
 
-### Parking Controller
-
-#### Create Booking
-`POST /api/parking/book`
-
-Create a new parking booking for a specific user(authentication via jwt token)
-
-**Required Permission:** `CREATE_BOOKING`
-
-**Request Body:**
-```json
-{
-  "spotId": 1,
-  "startTime": "2023-06-15T09:00:00Z",
-  "endTime": "2023-06-15T11:00:00Z"
-}
-```
-
-#### Create Guest Booking
-`POST /api/parking/guest-book`
-
-Create a guest parking booking. 
-This is useful for creating short-term(configure duration in `application.properties`) bookings in none another community (i.e. in community not listed in User profile.)
-
-**Required Permission:** `CREATE_GUEST_BOOKING`
-
-**Request Body:** Same as regular booking
-
-#### Get Available Spots
-`GET /api/parking/{communityId}/available-spots?from={datetime}&to={datetime}`
-
-Get available spots in a community for a given time range.
-
-**Required Permission:** `VIEW_AVAILABLE_SPOT`
+---
 
 ### Spot Controller
 
 #### Create Spot
+
 `POST /api/spots`
-
-Create a new parking spot.
-
 **Required Permission:** `CREATE_SPOT`
 
 **Request Body:**
+
 ```json
 {
   "code": "B-202",
@@ -146,163 +130,240 @@ Create a new parking spot.
 }
 ```
 
-#### Create Spot
-`PUT /api/spots/{id}`
-
-Create a new parking spot. Note for community managers they can create new spots only in their community.
-
-**Required Permission:** `CREATE_SPOT`
-
-**Request Body:**
-```json
-{
-  "code": "B-202",
-  "address": "Near Elevator",
-  "spotType": "RESIDENT",
-  "communityId": 1
-}
-```
 #### Update Spot
+
 `PUT /api/spots/{id}`
-
-Update a parking spot. Note for community managers they can modify spots only in their community.
-
 **Required Permission:** `UPDATE_SPOT`
 
-**Request Body:**
+**Request Body:** (only fields to update)
+
 ```json
 {
-  "code": "B-202",
+  "code": "B-203",
   "address": "Near Elevator",
-  "spotType": "STANDARD",
-  "communityId": 1
+  "spotType": "STANDARD"
 }
 ```
-Note: Not all fields are required to fill.
 
-#### Update Spot
+#### Delete Spot
+
 `DELETE /api/spots/{id}`
-
-Update a parking spot. Note for community managers they can delete spots only in their community.
-
 **Required Permission:** `DELETE_SPOT`
+
+---
+
+### Parking Controller
+
+#### Create Booking
+
+`POST /api/parking/book`
+Create a booking for the authenticated user in their own community.
+
+**Required Permission:** `CREATE_BOOKING`
+
+**Request Body:**
+
+```json
+{
+  "spotId": 1,
+  "startTime": "2025-08-15T09:00:00Z",
+  "endTime": "2025-08-15T11:00:00Z"
+}
+```
+
+#### Create Guest Booking
+
+`POST /api/parking/guest-book`
+Create a booking for a visitor spot in another community.
+**Required Permission:** `CREATE_GUEST_BOOKING`
+**Max Duration:** Configurable via `application.properties` (default 120 min)
+
+#### Get Available Spots
+
+`GET /api/parking/{communityId}/available-spots?from={datetime}&to={datetime}`
+Retrieve available spots in a community for a given time range.
+**Required Permission:** `VIEW_AVAILABLE_SPOT`
+
+#### Parking Status Changes
+
+* **Park in Spot:** `POST /api/parking/{bookingId}/park` → `BookingStatus.PARKED`
+* **Leave Spot:** `POST /api/parking/{bookingId}/leave` → `BookingStatus.VACATED`
+* **Release Spot:** `POST /api/parking/{bookingId}/release` → `BookingStatus.COMPLETED`
+* **Cancel Booking:** `POST /api/parking/{bookingId}/cancel` → `BookingStatus.CANCELLED`
+* **Change Status:** `POST /api/parking/{bookingId}/status?status={newStatus}` → `BookingStatus` updated
+
+---
 
 ### User Controller
 
 #### Create User
-`POST /api/users/community/{communityId}`
 
-Create a new user in a community.
+`POST /api/users/community/{communityId}`
+Default role: `ROLE_RESIDENT`
 
 **Request Body:**
+
 ```json
 {
   "firstName": "John",
   "lastName": "Doe",
   "email": "john.doe@example.com",
-  "phoneNumber": "+1234567890",
-  "password": "securepassword123",
+  "password": "securepassword123"
 }
 ```
-On default all users are created with role `ROLE_RESIDENT`. The role updates should be done later by admin.
 
 #### Create Admin
+
 `POST /api/users/create-admin`
+Creates an admin account for testing purposes (no community linked).
 
-Create an admin. This endpoint does not require authentication and only exists for testing purposes. Admin is not linked to a specific community.
+#### Update User
 
-**Request Body:** Same as regular user creation.
+`PUT /api/users/{id}`
+Update user details (self or requires `MANAGE_USERS` permission for others).
+
+#### Delete User
+
+`DELETE /api/users/{id}`
+
+#### Get User
+
+`GET /api/users/{id}`
+
+#### List All Users
+
+`GET /api/users`
+
+#### Get User Bookings
+
+`GET /api/users/bookings`
+Requires permission: `VIEW_ALL_BOOKINGS` or `VIEW_OWN_BOOKING`
+
+#### Get Current Bookings
+
+`GET /api/users/current-bookings`
+Requires permission: `VIEW_CURRENT_BOOKINGS`
+
+---
 
 ## Data Models
 
 ### Booking
+
 ```json
 {
-  "id": "long",
-  "userId": "long",
-  "spotId": "long",
+  "id": 1,
+  "userId": 1,
+  "spotId": 1,
   "startTime": "ISO-8601 datetime",
   "endTime": "ISO-8601 datetime",
-  "status": "enum[BOOKED, IN_PROGRESS, PARKED, COMPLETED, CANCELLED]"
+  "status": "RESERVED | PARKED | VACATED | COMPLETED | CANCELLED"
 }
 ```
 
 ### Spot
+
 ```json
 {
-  "id": "long",
-  "code": "string",
-  "address": "string",
-  "spotType": "enum[RESIDENT, VISITOR, HANDICAPPED]",
-  "communityId": "long"
+  "id": 1,
+  "code": "B-202",
+  "address": "Near Elevator",
+  "spotType": "RESIDENT | VISITOR | HANDICAPPED",
+  "communityId": 1
 }
 ```
 
 ### Community
+
 ```json
 {
-  "id": "long",
-  "name": "string",
-  "address": "string",
-  "communityManagerId": "long"
+  "id": 1,
+  "name": "Community Name",
+  "address": "Address",
+  "managerId": 2
 }
 ```
 
 ### User
+
 ```json
 {
-  "id": "long",
-  "firstName": "string",
-  "lastName": "string",
-  "email": "string",
-  "phoneNumber": "string",
-  "communityId": "long",
-  "role": "enum[ADMIN, COMMUNITY_MANAGER, RESIDENT, VISITOR]"
+  "id": 1,
+  "firstname": "John",
+  "lastname": "Doe",
+  "email": "john.doe@example.com",
+  "community": {
+      "id": 1,
+      "name": "Community Name"
+  },
+  "role": "ADMIN | COMMUNITY_MANAGER | RESIDENT | VISITOR"
 }
 ```
 
+---
+
 ## Permissions
-| Permission | Description |
-|------------|-------------|
-| VIEW_AVAILABLE_SPOT | View available parking spots |
-| CREATE_COMMUNITY | Create new communities |
-| UPDATE_COMMUNITY | Update existing communities |
-| DELETE_COMMUNITY | Delete communities |
-| CREATE_BOOKING | Create regular bookings |
-| CREATE_GUEST_BOOKING | Create guest bookings |
-| VIEW_ALL_BOOKINGS | View all bookings in system |
-| VIEW_OWN_BOOKING | View only own bookings |
-| VIEW_CURRENT_BOOKINGS | View currently active bookings |
-| PARK_IN_SPOT | Mark parking as in progress |
-| RELEASE_SPOT | Release a parking spot |
-| CANCEL_BOOKING | Cancel a booking |
-| CHANGE_BOOKING_STATUS | Modify booking status |
-| CREATE_SPOT | Create parking spots |
-| UPDATE_SPOT | Update parking spots |
-| DELETE_SPOT | Delete parking spots |
+
+| Permission              | Description                       |
+| ----------------------- | --------------------------------- |
+| VIEW\_AVAILABLE\_SPOT   | View available parking spots      |
+| CREATE\_COMMUNITY       | Create communities                |
+| UPDATE\_COMMUNITY       | Update communities                |
+| DELETE\_COMMUNITY       | Delete communities                |
+| CREATE\_BOOKING         | Create bookings in own community  |
+| CREATE\_GUEST\_BOOKING  | Create bookings for visitor spots |
+| VIEW\_ALL\_BOOKINGS     | View all bookings in system       |
+| VIEW\_OWN\_BOOKING      | View only own bookings            |
+| VIEW\_CURRENT\_BOOKINGS | View currently active bookings    |
+| PARK\_IN\_SPOT          | Mark booking as parked            |
+| RELEASE\_SPOT           | Release a parking spot            |
+| CANCEL\_BOOKING         | Cancel a booking                  |
+| CHANGE\_BOOKING\_STATUS | Change booking status             |
+| CREATE\_SPOT            | Create spots                      |
+| UPDATE\_SPOT            | Update spots                      |
+| DELETE\_SPOT            | Delete spots                      |
+| MANAGE\_USERS           | Update or delete other users      |
+
+---
 
 ## Business Rules
-1. **Booking Restrictions**:
-    - Regular users can only book spots within their own community
-    - Visitor spots can only be booked through guest booking endpoint
-    - Guest bookings have maximum duration limit (default: 120 minutes)
 
-2. **Spot Management**:
-    - Only community managers can manage spots in their community
-    - Visitor spots must be of type VISITOR
+1. **Booking Restrictions**
 
-3. **Booking Status Flow**:
+    * Regular users can book only within their community.
+    * Visitor spots can only be booked via guest bookings.
+    * Guest bookings have maximum duration (default: 120 minutes).
+2. **Spot Management**
+
+    * Only community managers can manage spots in their community.
+    * Visitor spots must be of type `VISITOR`.
+3. **Booking Status Flow**
+
    ```
-   BOOKED → PARKED → IN_PROGRESS → COMPLETED
-   BOOKED → CANCELLED
+   RESERVED → PARKED → VACATED → COMPLETED
+   RESERVED → CANCELLED
    ```
+4. **Community Management**
 
-4. **Community Management**:
-    - Only admins can create new communities
-    - Community managers are assigned during community creation
+    * Only admins can create communities.
+    * Managers can be assigned during creation.
+
+---
+
+## Validations
+
+* All `Create` DTOs use `@NotNull`/`@NotBlank` and `@Email` where applicable.
+* `CreateBookingDTO` has cross-field validation: `endTime` must be after `startTime`.
+* Passwords must be at least 4 characters long.
+* Spot types must be valid enums: `RESIDENT | VISITOR | HANDICAPPED`.
+
+---
 
 ## Error Handling
-The API returns appropriate HTTP status codes with error details:
 
-
-
+* `400 Bad Request` → Validation errors or business rule violations
+* `401 Unauthorized` → JWT token missing or invalid
+* `403 Forbidden` → Permission denied
+* `404 Not Found` → Resource does not exist
+* `409 Conflict` → Spot already booked or other conflicts
+* `500 Internal Server Error` → Unexpected errors

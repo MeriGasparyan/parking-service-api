@@ -25,21 +25,15 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
-                         AuthenticationException authException) throws IOException, ServletException {
-        final Throwable throwable = authException.getCause() == null ? authException : authException.getCause();
-        if (throwable instanceof BadCredentialsException) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        } else if (throwable instanceof LockedException) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        } else {
-            System.out.println(throwable.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        }
+                         AuthenticationException authException) throws IOException {
 
-        final ExceptionResponse exceptionResponse = ExceptionResponse.builder()
-                .withStatus(HttpStatus.valueOf(response.getStatus()))
-                .withMessage(throwable.getMessage())
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+        ExceptionResponse exceptionResponse = ExceptionResponse.builder()
+                .status(HttpStatus.UNAUTHORIZED)
+                .message(authException.getMessage())
                 .build();
+
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         objectMapper.writeValue(response.getOutputStream(), exceptionResponse);
     }

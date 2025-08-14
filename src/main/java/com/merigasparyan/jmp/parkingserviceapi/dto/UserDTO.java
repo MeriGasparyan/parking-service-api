@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -32,7 +30,6 @@ public class UserDTO {
         if (user.getCommunity() != null) {
             dto.setCommunity(CommunityDTO.mapToDTO(user.getCommunity()));
         }
-
         return dto;
     }
 }

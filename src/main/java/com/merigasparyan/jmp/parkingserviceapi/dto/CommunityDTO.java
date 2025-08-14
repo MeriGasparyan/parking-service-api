@@ -11,6 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CommunityDTO {
+
     private Long id;
     private String name;
     private String address;

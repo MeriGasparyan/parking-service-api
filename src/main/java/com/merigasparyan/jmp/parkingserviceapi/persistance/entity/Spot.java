@@ -1,10 +1,7 @@
 package com.merigasparyan.jmp.parkingserviceapi.persistance.entity;
 import com.merigasparyan.jmp.parkingserviceapi.enums.SpotType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
@@ -12,6 +9,7 @@ import lombok.Setter;
 @Table(name = "spots")
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Spot {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "spots_id_seq")

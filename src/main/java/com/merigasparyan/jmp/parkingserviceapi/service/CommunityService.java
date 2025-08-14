@@ -14,6 +14,7 @@ import com.merigasparyan.jmp.parkingserviceapi.security.CustomUserDetails;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,81 +26,92 @@ public class CommunityService {
     private final SpotRepository spotRepository;
     private final UserRepository userRepository;
 
+    /* --------------------------------- SPOTS --------------------------------- */
     @Transactional
     public List<SpotDTO> getAllSpotsByCommunity(Long communityId) {
-        return spotRepository.findByCommunityId(communityId).stream()
+        return spotRepository.findByCommunityId(communityId)
+                .stream()
                 .map(SpotDTO::mapToSpotDto)
                 .toList();
     }
 
+    /* --------------------------------- COMMUNITIES --------------------------------- */
     @Transactional
     public CommunityDTO createCommunity(CreateCommunityDTO dto, CustomUserDetails currentUser) {
-        if (!currentUser.getUser().getRole().getRole().equals(Role.ROLE_ADMIN))
-            throw new IllegalCallerException("User is not admin");
+        requireAdmin(currentUser);
+
         Community community = new Community();
         community.setName(dto.getName());
         community.setAddress(dto.getAddress());
-        if(dto.getManagerId() != null){
-            User manager = userRepository.findById(dto.getManagerId()).orElse(null);
-            if (manager != null) {
-                community.setCommunityManager(manager);
-            }
-        }
+        community.setCommunityManager(findUserOrNull(dto.getManagerId()));
 
         Community saved = communityRepository.save(community);
-        return CommunityDTO.mapToDTO(community);
+        return CommunityDTO.mapToDTO(saved);
     }
 
     @Transactional
     public CommunityDTO updateCommunity(Long id, CustomUserDetails currentUser, UpdateCommunityDTO dto) {
-        Community community = communityRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Community not found with id " + id));
+        Community community = findCommunityOrThrow(id);
+        requireAdminOrManager(currentUser, community);
 
-        if ((community.getCommunityManager() != null &&
-                !community.getCommunityManager().getId().equals(currentUser.getId()) )
-                || !currentUser.getUser().getRole().getRole().equals(Role.ROLE_ADMIN)) {
-            throw new IllegalCallerException("Community update is not allowed");
-        }
-        if (dto.getName() != null) {
-            community.setName(dto.getName());
-        }
-        if (dto.getAddress() != null) {
-            community.setAddress(dto.getAddress());
-        }
+        if (dto.getName() != null) community.setName(dto.getName());
+        if (dto.getAddress() != null) community.setAddress(dto.getAddress());
         if (dto.getManagerId() != null) {
-            User manager = userRepository.findById(dto.getManagerId())
-                    .orElseThrow(() -> new EntityNotFoundException("Community manager not found with id " + dto.getManagerId()));
-            community.setCommunityManager(manager);
+            community.setCommunityManager(findUserOrThrow(dto.getManagerId()));
         }
 
-        Community updated = communityRepository.save(community);
-        return CommunityDTO.mapToDTO(community);
+        return CommunityDTO.mapToDTO(communityRepository.save(community));
     }
 
     @Transactional
     public CommunityDTO getCommunity(Long id) {
-        Community community = communityRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Community not found with id " + id));
-        return CommunityDTO.mapToDTO(community);
+        return CommunityDTO.mapToDTO(findCommunityOrThrow(id));
     }
 
     @Transactional
     public List<CommunityDTO> getAllCommunities() {
-        return communityRepository.findAll().stream()
+        return communityRepository.findAll()
+                .stream()
                 .map(CommunityDTO::mapToDTO)
                 .toList();
     }
 
     @Transactional
     public void deleteCommunity(Long id, CustomUserDetails currentUser) {
-        Community community = communityRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Community not found with id " + id));
-
-        if ((community.getCommunityManager() != null &&
-                !community.getCommunityManager().getId().equals(currentUser.getId()) )|| !currentUser.getUser().getRole().getRole().equals(Role.ROLE_ADMIN)) {
-            throw new IllegalCallerException("Community deletion is not allowed");
-        }
+        Community community = findCommunityOrThrow(id);
+        requireAdminOrManager(currentUser, community);
         communityRepository.deleteById(id);
+    }
+
+    /* --------------------------------- PRIVATE HELPERS --------------------------------- */
+    private Community findCommunityOrThrow(Long id) {
+        return communityRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Community not found with id " + id));
+    }
+
+    private User findUserOrThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id " + id));
+    }
+
+    private User findUserOrNull(Long id) {
+        return id == null ? null : userRepository.findById(id).orElse(null);
+    }
+
+    private void requireAdmin(CustomUserDetails currentUser) {
+        if (!currentUser.getUser().getRole().getRole().equals(Role.ROLE_ADMIN)) {
+            throw new AccessDeniedException("User is not admin");
+        }
+    }
+
+    private void requireAdminOrManager(CustomUserDetails currentUser, Community community) {
+        boolean isAdmin = currentUser.getUser().getRole().getRole().equals(Role.ROLE_ADMIN);
+        boolean isManager = community.getCommunityManager() != null
+                && community.getCommunityManager().getId().equals(currentUser.getId());
+
+        if (!isAdmin && !isManager) {
+            throw new AccessDeniedException("You cannot perform this action");
+        }
     }
 
 }
