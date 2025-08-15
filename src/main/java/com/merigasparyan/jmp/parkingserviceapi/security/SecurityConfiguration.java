@@ -89,6 +89,4 @@ public class SecurityConfiguration {
                 .addFilterBefore(this.authorizationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
-//
-
 }
